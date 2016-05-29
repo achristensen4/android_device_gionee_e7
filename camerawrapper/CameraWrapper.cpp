@@ -135,7 +135,7 @@ static char *camera_fixup_setparams(int id, const char *settings)
 
     params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
     params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
-    params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "960x720");
+    params.set(android::CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "960x720");
 
     android::String8 strParams = params.flatten();
 
