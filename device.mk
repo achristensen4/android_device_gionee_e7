@@ -174,7 +174,9 @@ PRODUCT_PACKAGES += \
     libmmjpeg_interface \
     camera.msm8974 \
     mm-jpeg-interface-test \
-    mm-qcamera-app
+    mm-qcamera-app \
+    libqdutils \
+    libqdMetaData
 
 PRODUCT_PACKAGES += \
     libmm-omxcore \
