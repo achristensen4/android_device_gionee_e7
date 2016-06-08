@@ -111,6 +111,8 @@ static char *camera_fixup_getparams(int __attribute__((unused)) id,
 
     params.remove("selected-auto-scene");
     params.remove("scene-detect-values");
+    params.remove("food");
+    params.remove("gesture");
 
     android::String8 strParams = params.flatten();
     char *ret = strdup(strParams.string());
