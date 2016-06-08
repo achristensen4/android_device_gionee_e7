@@ -19,8 +19,6 @@ const char CameraParameters::VIDEO_WDR_OFF[] = "video-wdr"; \
 const char CameraParameters::VIDEO_WDR_ON[] = "video-wdr"; \
 const char CameraParameters::OBJECT_TRACKING_ON[] = "object-tracking"; \
 const char CameraParameters::OBJECT_TRACKING_OFF[] = "object-tracking"; \
-const char CameraParameters::SCENE_MODE_GESTURE[] = "gesture"; \
-const char CameraParameters::SCENE_MODE_FOOD[] = "food"; \
 int CameraParameters::getStr(const char *key) const { return -1; };
 
 #define CAMERA_PARAMETERS_EXTRA_H \
@@ -44,6 +42,4 @@ static const char VIDEO_WDR_OFF[]; \
 static const char VIDEO_WDR_ON[]; \
 static const char OBJECT_TRACKING_ON[]; \
 static const char OBJECT_TRACKING_OFF[]; \
-static const char SCENE_MODE_GESTURE[]; \
-static const char SCENE_MODE_FOOD[]; \
 int getStr(const char *key) const;
