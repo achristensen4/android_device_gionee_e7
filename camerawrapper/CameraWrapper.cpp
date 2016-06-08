@@ -104,6 +104,9 @@ static char *camera_fixup_getparams(int __attribute__((unused)) id,
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
 
+    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
+    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
+
 #ifdef LOG_PARAMETERS
     ALOGV("%s: Original parameters:", __FUNCTION__);
     params.dump();
@@ -124,6 +127,9 @@ static char *camera_fixup_setparams(int id, const char *settings)
 {
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
+
+    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
+    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
 
 #ifdef LOG_PARAMETERS
     ALOGV("%s: original parameters:", __FUNCTION__);
