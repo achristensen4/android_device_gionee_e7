@@ -105,9 +105,6 @@ static char *camera_fixup_getparams(int __attribute__((unused)) id,
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
 
-    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
-    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
-
 #ifdef LOG_PARAMETERS
     ALOGV("%s: Original parameters:", __FUNCTION__);
     params.dump();
@@ -115,6 +112,9 @@ static char *camera_fixup_getparams(int __attribute__((unused)) id,
 
     android::String8 strParams = params.flatten();
     char *ret = strdup(strParams.string());
+
+    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
+    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
 
 #ifdef LOG_PARAMETERS
     ALOGV("%s: fixed parameters:", __FUNCTION__);
@@ -129,9 +129,6 @@ static char *camera_fixup_setparams(int id, const char *settings)
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
 
-    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
-    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
-
 #ifdef LOG_PARAMETERS
     ALOGV("%s: original parameters:", __FUNCTION__);
     params.dump();
@@ -143,6 +140,9 @@ static char *camera_fixup_setparams(int id, const char *settings)
         free(fixed_set_params[id]);
     fixed_set_params[id] = strdup(strParams.string());
     char *ret = fixed_set_params[id];
+
+    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
+    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
 
 #ifdef LOG_PARAMETERS
     ALOGV("%s: fixed parameters:", __FUNCTION__);
