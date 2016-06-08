@@ -43,7 +43,7 @@ static const char KEY_VIDEO_WDR_SUPPORTED[]; \
 static const char VIDEO_WDR_OFF[]; \
 static const char VIDEO_WDR_ON[]; \
 static const char OBJECT_TRACKING_ON[]; \
-static const char OBJECT_TRACKING_OFF[];
+static const char OBJECT_TRACKING_OFF[]; \
 static const char SCENE_MODE_GESTURE[]; \
 static const char SCENE_MODE_FOOD[]; \
 int getStr(const char *key) const;
