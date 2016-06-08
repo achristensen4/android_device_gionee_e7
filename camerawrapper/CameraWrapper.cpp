@@ -113,9 +113,6 @@ static char *camera_fixup_getparams(int __attribute__((unused)) id,
     android::String8 strParams = params.flatten();
     char *ret = strdup(strParams.string());
 
-    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
-    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
-
 #ifdef LOG_PARAMETERS
     ALOGV("%s: fixed parameters:", __FUNCTION__);
     params.dump();
