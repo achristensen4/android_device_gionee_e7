@@ -280,7 +280,7 @@ void QCamera2HardwareInterface::preview_stream_cb_routine(mm_camera_super_buf_t 
         pme->debugShowPreviewFPS();
     }
 
-    int idx = frame->buf_idx;
+    uint32_t idx = frame->buf_idx;
     pme->dumpFrameToFile(stream, frame, QCAMERA_DUMP_FRM_PREVIEW)
 
     // Display the buffer.
