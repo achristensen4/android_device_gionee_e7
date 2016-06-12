@@ -284,6 +284,7 @@ void QCamera2HardwareInterface::preview_stream_cb_routine(mm_camera_super_buf_t 
     pme->dumpFrameToFile(stream, frame, QCAMERA_DUMP_FRM_PREVIEW)
 
     // Display the buffer.
+    CDBG("%p displayBuffer %d E", pme, idx);
     int dequeuedIdx = memory->displayBuffer(idx);
     if (dequeuedIdx < 0 || dequeuedIdx >= memory->getCnt()) {
         ALOGD("%s: Invalid dequeued buffer index %d from display",
