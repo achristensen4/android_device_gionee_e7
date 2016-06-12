@@ -1788,7 +1788,7 @@ int32_t mm_stream_calc_offset_preview(cam_format_t fmt,
         buf_planes->plane_info.mp[1].stride = stride;
         buf_planes->plane_info.mp[1].scanline = scanline;
         buf_planes->plane_info.mp[1].width = dim->width;
-        buf_planes->plane_info.mp[1].height = dim->height
+        buf_planes->plane_info.mp[1].height = dim->height;
 
         buf_planes->plane_info.frame_len =
             PAD_TO_SIZE(buf_planes->plane_info.mp[0].len +
