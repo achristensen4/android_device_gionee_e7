@@ -407,6 +407,7 @@ public:
     int32_t adjustPreviewFpsRange(cam_fps_range_t *fpsRange);
     bool isJpegPictureFormat() {return (mPictureFormat == CAM_FORMAT_JPEG);};
     bool isNV16PictureFormat() {return (mPictureFormat == CAM_FORMAT_YUV_422_NV16);};
+    bool isNV21PictureFormat() {return (mPictureFormat == CAM_FORMAT_YUV_420_NV21);};
     cam_denoise_process_type_t getWaveletDenoiseProcessPlate();
     int32_t getLiveSnapshotSize(cam_dimension_t &dim) {dim = m_LiveSnapshotSize; return NO_ERROR;};
     int getFlipMode(cam_stream_type_t streamType);
@@ -416,6 +417,8 @@ public:
     bool isCAFLocked() {return m_bCAFLocked;};
     void setAFRunning(bool bflag) {m_bAFRunning = bflag;};
     bool isAFRunning() {return m_bAFRunning;};
+    bool isYUVFrameInfoNeeded();
+    const char*getFrameFmtString(cam_format_t fmt);
 
 private:
     int32_t setPreviewSize(const QCameraParameters& );
