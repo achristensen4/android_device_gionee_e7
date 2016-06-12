@@ -243,13 +243,13 @@ void QCamera2HardwareInterface::postproc_channel_cb_routine(mm_camera_super_buf_
  *             to kernel for future use.
  *==========================================================================*/
 void QCamera2HardwareInterface::preview_stream_cb_routine(mm_camera_super_buf_t *super_frame,
-                                                          QCameraStream * stream,
+                                                          QCameraStream *stream,
                                                           void *userdata)
 {
     ALOGD("[KPI Perf] %s : BEGIN", __func__);
     int err = NO_ERROR;
     QCamera2HardwareInterface *pme = (QCamera2HardwareInterface *)userdata;
-    QCameraGrallocMemory *memory = (QCameraGrallocMemory *)super_frame->bufs[0]->mem_info;
+    QCameraGrallocMemory *mestrea (QCameraGrallocMemory *)super_frame->bufs[0]->mem_info;
 
     if (pme == NULL) {
         ALOGE("%s: Invalid hardware object", __func__);
@@ -516,7 +516,7 @@ void QCamera2HardwareInterface::postview_stream_cb_routine(mm_camera_super_buf_t
  *             (release_recording_frame) to return the frame back
  *==========================================================================*/
 void QCamera2HardwareInterface::video_stream_cb_routine(mm_camera_super_buf_t *super_frame,
-                                                        QCameraStream */*stream*/,
+                                                        QCameraStream */*stream,
                                                         void *userdata)
 {
     ALOGD("[KPI Perf] %s : BEGIN", __func__);
