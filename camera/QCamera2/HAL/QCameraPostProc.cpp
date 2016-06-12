@@ -470,7 +470,12 @@ int32_t QCameraPostProcessor::processData(mm_camera_super_buf_t *frame)
         ALOGD("%s: need reprocess", __func__);
         // enqueu to post proc input queue
         m_inputPPQ.enqueue((void *)frame);
-    } else if (m_parent->mParameters.isNV16PictureFormat()) {
+    } else if (m_parent->mParameters.isNV16PictureFormat() ||
+        m_parent->mParameters.isNV21PictureFormat()) {
+        //check if raw frame information is needed.
+        if(m_parent->mParameters.isYUVFrameInfoNeeded())
+            setYUVFrameInfo(frame);
+
         processRawData(frame);
     } else {
         ALOGD("%s: no need offline reprocess, sending to jpeg encoding", __func__);
@@ -634,10 +639,14 @@ int32_t QCameraPostProcessor::processPPData(mm_camera_super_buf_t *frame)
         return BAD_VALUE;
     }
 
-    if (m_parent->mParameters.isNV16PictureFormat()) {
+    if (m_parent->mParameters.isNV16PictureFormat() ||
+        m_parent->mParameters.isNV21PictureFormat()) {
         releaseSuperBuf(job->src_frame);
         free(job->src_frame);
         free(job);
+
+        if(m_parent->mParameters.isYUVFrameInfoNeeded())
+            setYUVFrameInfo(frame);
         return processRawData(frame);
     }
 
@@ -1134,15 +1143,38 @@ int32_t QCameraPostProcessor::processRawImageImpl(mm_camera_super_buf_t *recvd_f
 {
     int32_t rc = NO_ERROR;
 
+    QCameraChannel *pChannel = m_parent->getChannelByHandle(recvd_frame->ch_id);
+    QCameraStream *pStream = NULL;
     mm_camera_buf_def_t *frame = NULL;
-    for ( int i= 0 ; i < recvd_frame->num_bufs ; i++ ) {
-        if ( recvd_frame->bufs[i]->stream_type == CAM_STREAM_TYPE_SNAPSHOT ||
-            recvd_frame->bufs[i]->stream_type == CAM_STREAM_TYPE_NON_ZSL_SNAPSHOT ||
-             recvd_frame->bufs[i]->stream_type == CAM_STREAM_TYPE_RAW ) {
-            frame = recvd_frame->bufs[i];
-            break;
+    // check reprocess channel if not found
+    if (pChannel == NULL) {
+        if (m_pReprocChannel != NULL &&
+            m_pReprocChannel->getMyHandle() == recvd_frame->ch_id) {
+            pChannel = m_pReprocChannel;
         }
     }
+    if (pChannel == NULL) {
+        ALOGE("%s: No corresponding channel (ch_id = %d) exist, return here",
+              __func__, recvd_frame->ch_id);
+        return BAD_VALUE;
+    }
+
+    // find snapshot frame
+    for (int i = 0; i < recvd_frame->num_bufs; i++) {
+        QCameraStream *pCurStream =
+            pChannel->getStreamByHandle(recvd_frame->bufs[i]->stream_id);
+        if (pCurStream != NULL) {
+            if (pCurStream->isTypeOf(CAM_STREAM_TYPE_SNAPSHOT) ||
+                pCurStream->isTypeOf(CAM_STREAM_TYPE_RAW) ||
+                pCurStream->isOrignalTypeOf(CAM_STREAM_TYPE_SNAPSHOT) ||
+                pCurStream->isOrignalTypeOf(CAM_STREAM_TYPE_RAW)) {
+                pStream = pCurStream;
+                frame = recvd_frame->bufs[i];
+                break;
+            }
+        }
+    }
+
     if ( NULL == frame ) {
         ALOGE("%s: No valid raw buffer", __func__);
         return BAD_VALUE;
@@ -1157,8 +1189,13 @@ int32_t QCameraPostProcessor::processRawImageImpl(mm_camera_super_buf_t *recvd_f
 
     if (NULL != rawMemObj && NULL != raw_mem) {
         // dump frame into file
-        m_parent->dumpFrameToFile(frame->buffer, frame->frame_len,
-                                  frame->frame_idx, QCAMERA_DUMP_FRM_RAW);
+        if (frame->stream_type == CAM_STREAM_TYPE_SNAPSHOT ||
+            pStream->isOrignalTypeOf(CAM_STREAM_TYPE_SNAPSHOT)) {
+            // for YUV422 NV16 case
+            m_parent->dumpFrameToFile(pStream, frame, QCAMERA_DUMP_FRM_SNAPSHOT);
+        } else {
+            m_parent->dumpFrameToFile(pStream, frame, QCAMERA_DUMP_FRM_RAW);
+        }
 
         // send data callback / notify for RAW_IMAGE
         if (NULL != m_parent->mDataCb &&
@@ -1433,6 +1470,74 @@ int32_t QCameraPostProcessor::getJpegPaddingReq(cam_padding_info_t &padding_info
     padding_info.height_padding  = CAM_PAD_TO_16;
     padding_info.plane_padding  = CAM_PAD_TO_WORD;
     return NO_ERROR;
+}
+
+/*===========================================================================
+ * FUNCTION   : setYUVFrameInfo
+ *
+ * DESCRIPTION: set Raw YUV frame data info for up-layer
+ *
+ * PARAMETERS :
+ *   @frame   : process frame received from mm-camera-interface
+ *
+ * RETURN     : int32_t type of status
+ *              NO_ERROR  -- success
+ *              none-zero failure code
+ *
+ * NOTE       : currently we return frame len, y offset, cbcr offset and frame format
+ *==========================================================================*/
+int32_t QCameraPostProcessor::setYUVFrameInfo(mm_camera_super_buf_t *recvd_frame)
+{
+    QCameraChannel *pChannel = m_parent->getChannelByHandle(recvd_frame->ch_id);
+    // check reprocess channel if not found
+    if (pChannel == NULL) {
+        if (m_pReprocChannel != NULL &&
+            m_pReprocChannel->getMyHandle() == recvd_frame->ch_id) {
+            pChannel = m_pReprocChannel;
+        }
+    }
+
+    if (pChannel == NULL) {
+        ALOGE("%s: No corresponding channel (ch_id = %d) exist, return here",
+              __func__, recvd_frame->ch_id);
+        return BAD_VALUE;
+    }
+
+    // find snapshot frame
+    for (int i = 0; i < recvd_frame->num_bufs; i++) {
+        QCameraStream *pStream =
+            pChannel->getStreamByHandle(recvd_frame->bufs[i]->stream_id);
+        if (pStream != NULL) {
+            if (pStream->isTypeOf(CAM_STREAM_TYPE_SNAPSHOT) ||
+                pStream->isOrignalTypeOf(CAM_STREAM_TYPE_SNAPSHOT)) {
+                //get the main frame, use stream info
+                cam_frame_len_offset_t frame_offset;
+                cam_dimension_t frame_dim;
+                cam_format_t frame_fmt;
+                const char *fmt_string;
+                pStream->getFrameDimension(frame_dim);
+                pStream->getFrameOffset(frame_offset);
+                pStream->getFormat(frame_fmt);
+                fmt_string = m_parent->mParameters.getFrameFmtString(frame_fmt);
+
+                int cbcr_offset = frame_offset.mp[0].len - frame_dim.width * frame_dim.height;
+                m_parent->mParameters.set("snapshot-framelen", frame_offset.frame_len);
+                m_parent->mParameters.set("snapshot-yoff", frame_offset.mp[0].offset);
+                m_parent->mParameters.set("snapshot-cbcroff", cbcr_offset);
+                if(fmt_string != NULL){
+                    m_parent->mParameters.set("snapshot-format", fmt_string);
+                }else{
+                    m_parent->mParameters.set("snapshot-format", "");
+                }
+
+                ALOGD("%s: frame width=%d, height=%d, yoff=%d, cbcroff=%d, fmt_string=%s", __func__,
+                        frame_dim.width, frame_dim.height, frame_offset.mp[0].offset, cbcr_offset, fmt_string);
+                return NO_ERROR;
+            }
+        }
+    }
+
+    return BAD_VALUE;
 }
 
 /*===========================================================================
