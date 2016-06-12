@@ -565,10 +565,9 @@ int32_t QCameraPostProcessor::processJpegEvt(qcamera_jpeg_evt_payload_t *evt)
         goto end;
     }
 
-    m_parent->dumpFrameToFile(evt->out_data.buf_vaddr,
+    m_parent->dumpJpegToFile(evt->out_data.buf_vaddr,
                               evt->out_data.buf_filled_len,
-                              evt->jobId,
-                              QCAMERA_DUMP_FRM_JPEG);
+                              evt->jobId);
     ALOGD("%s: Dump jpeg_size=%d", __func__, evt->out_data.buf_filled_len);
 
     // alloc jpeg memory to pass to upper layer
@@ -991,8 +990,7 @@ int32_t QCameraPostProcessor::encodeData(qcamera_jpeg_data_t *jpeg_job_data,
     }
 
     // dump snapshot frame if enabled
-    m_parent->dumpFrameToFile(main_frame->buffer, main_frame->frame_len,
-                              main_frame->frame_idx, QCAMERA_DUMP_FRM_SNAPSHOT);
+    m_parent->dumpFrameToFile(main_stream, main_frame, QCAMERA_DUMP_FRM_SNAPSHOT);
 
     // send upperlayer callback for raw image
     camera_memory_t *mem = memObj->getMemory(main_frame->buf_idx, false);
@@ -1019,8 +1017,7 @@ int32_t QCameraPostProcessor::encodeData(qcamera_jpeg_data_t *jpeg_job_data,
 
     if (thumb_frame != NULL) {
         // dump thumbnail frame if enabled
-        m_parent->dumpFrameToFile(thumb_frame->buffer, thumb_frame->frame_len,
-                                  thumb_frame->frame_idx, QCAMERA_DUMP_FRM_THUMBNAIL);
+        m_parent->dumpFrameToFile(thumb_stream, thumb_frame, QCAMERA_DUMP_FRM_THUMBNAIL);
     }
 
     if (mJpegClientHandle <= 0) {
