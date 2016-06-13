@@ -2859,7 +2859,7 @@ int32_t QCameraParameters::initDefaultParameters()
         set(KEY_SUPPORTED_PREVIEW_SIZES, previewSizeValues.string());
         ALOGD("%s: supported preview sizes: %s", __func__, previewSizeValues.string());
         // Set default preview size
-        CameraParameters::setPreviewSize(800x480);
+        CameraParameters::setPreviewSize(int 800, int 480);
     } else {
         ALOGE("%s: supported preview sizes cnt is 0 or exceeds max!!!", __func__);
     }
@@ -2872,7 +2872,7 @@ int32_t QCameraParameters::initDefaultParameters()
         set(KEY_SUPPORTED_VIDEO_SIZES, videoSizeValues.string());
         ALOGD("%s: supported video sizes: %s", __func__, videoSizeValues.string());
         // Set default video size
-        CameraParameters::setVideoSize(800x480);
+        CameraParameters::setVideoSize(int 800, int 480);
 
         //Set preferred Preview size for video
         String8 vSize = createSizesString(&m_pCapability->video_sizes_tbl[0], 1);
@@ -2890,7 +2890,7 @@ int32_t QCameraParameters::initDefaultParameters()
         ALOGD("%s: supported pic sizes: %s", __func__, pictureSizeValues.string());
         // Set default picture size to the smallest resolution
         CameraParameters::setPictureSize(
-           800x480);
+           int 800, int 480);
     } else {
         ALOGE("%s: supported picture sizes cnt is 0 or exceeds max!!!", __func__);
     }
