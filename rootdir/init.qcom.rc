@@ -612,7 +612,7 @@ service dhcpcd_bnep0 /system/bin/dhcpcd -BKLG
     disabled
     oneshot
 
-service qcamerasvr /system/bin/mm-qcamera-daemon
+service qcamerasvr /system/bin/mm-daemon
     class late_start
     user camera
     group camera system inet input
