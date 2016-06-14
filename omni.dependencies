@@ -18,8 +18,8 @@
     "revision": "android-5.1"
   },
   {
-    "remote": "aospSX",
-    "repository": "platform_external_mm-open-daemon",
+    "remote": "github",
+    "repository": "feroxx/platform_external_mm-open-daemon",
     "target_path": "platform/external",
     "revision": "jb-dev"
   },
