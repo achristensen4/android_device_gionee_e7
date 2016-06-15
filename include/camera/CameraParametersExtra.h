@@ -91,7 +91,7 @@ const char CameraParameters::PIXEL_FORMAT_YV12[] = "yuv420p"; \
 const char CameraParameters::PIXEL_FORMAT_NV12[] = "nv12"; \
 const char CameraParameters::SCENE_MODE_GESTURE[] = "gesture"; \
 const char CameraParameters::SCENE_MODE_FOOD[] = "food"; \
-int CameraParameters::setAEBracket(const char *) { EXP_BRACKETING_OFF; }; \
+int CameraParameters::setAEBracket(const char *) const { EXP_BRACKETING_OFF; }; \
 int CameraParameters::getStr(const char *) const { return -1; };
 
 #define CAMERA_PARAMETERS_EXTRA_H \
@@ -187,5 +187,5 @@ int CameraParameters::getStr(const char *) const { return -1; };
     static const char PIXEL_FORMAT_NV12[]; \
     static const char SCENE_MODE_GESTURE[]; \
     static const char SCENE_MODE_FOOD[]; \
-    int setAEBracket(const char *); \
+    int setAEBracket(const char *) const; \
     int getStr(const char *) const;
