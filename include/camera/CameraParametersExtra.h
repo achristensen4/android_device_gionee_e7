@@ -92,7 +92,7 @@ const char CameraParameters::PIXEL_FORMAT_NV12[] = "nv12"; \
 const char CameraParameters::SCENE_MODE_GESTURE[] = "gesture"; \
 const char CameraParameters::SCENE_MODE_FOOD[] = "food"; \
 int CameraParameters::setAEBracket(const char *mode) { return -1; }; \
-int CameraParameters::setBurstLEDFlashLevel(cam_led_flash_burst_level); \
+int CameraParameters::setBurstLEDFlashLevel(const char *key) const { cam_led_flash_burst_level; }; \
 int CameraParameters::getStr(const char *key) const { return -1; };
 
 #define CAMERA_PARAMETERS_EXTRA_H \
@@ -189,5 +189,5 @@ int CameraParameters::getStr(const char *key) const { return -1; };
     static const char SCENE_MODE_GESTURE[]; \
     static const char SCENE_MODE_FOOD[]; \
     int setAEBracket(const char *mode); \
-    int setBurstLEDFlashLevel(cam_led_flash_burst_level); \
+    int setBurstLEDFlashLevel(const char *key) const; \
     int getStr(const char *key) const;
