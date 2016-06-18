@@ -26,6 +26,7 @@
 
 #define LOG_TAG "camera"
 #include <cutils/log.h>
+#include <cutils/properties.h>
 
 #include <utils/threads.h>
 #include <utils/String8.h>
