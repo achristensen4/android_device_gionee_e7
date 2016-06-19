@@ -109,26 +109,26 @@ static char *camera_fixup_getparams(int id, const char *settings)
 
     params.remove("gesture");
     params.remove("food");
-    params.set(CameraParameters::KEY_SUPPORTED_FLASH_MODES, "auto,on,off,torch");
+    params.set(android::CameraParameters::KEY_SUPPORTED_FLASH_MODES, "auto,on,off,torch");
 
-    params.set(CameraParameters::KEY_QC_SUPPORTED_DENOISE, "denoise-on,denoise-off");
-    params.set(CameraParameters::KEY_QC_SUPPORTED_FACE_DETECTION, "on,off");
-    params.set(CameraParameters::KEY_QC_SUPPORTED_REDEYE_REDUCTION, "enable,disable");
+    params.set(android::CameraParameters::KEY_QC_SUPPORTED_DENOISE, "denoise-on,denoise-off");
+    params.set(android::CameraParameters::KEY_QC_SUPPORTED_FACE_DETECTION, "on,off");
+    params.set(android::CameraParameters::KEY_QC_SUPPORTED_REDEYE_REDUCTION, "enable,disable");
 
-    params.set(CameraParameters::KEY_QC_SUPPORTED_HFR_SIZES, "1296x728,1296x728,720x480");
-    params.set(CameraParameters::KEY_QC_SUPPORTED_VIDEO_HIGH_FRAME_RATE_MODES, "60,90,120,off");
-    params.set(CameraParameters::KEY_QC_SUPPORTED_ZSL_MODES, "on,off");
+    params.set(android::CameraParameters::KEY_QC_SUPPORTED_HFR_SIZES, "1296x728,1296x728,720x480");
+    params.set(android::CameraParameters::KEY_QC_SUPPORTED_VIDEO_HIGH_FRAME_RATE_MODES, "60,90,120,off");
+    params.set(android::CameraParameters::KEY_QC_SUPPORTED_ZSL_MODES, "on,off");
 
-    params.set(CameraParameters::KEY_QC_SUPPORTED_TOUCH_AF_AEC, "touch-on,touch-off");
-    params.set(CameraParameters::KEY_SUPPORTED_SCENE_MODES,
+    params.set(android::CameraParameters::KEY_QC_SUPPORTED_TOUCH_AF_AEC, "touch-on,touch-off");
+    params.set(android::CameraParameters::KEY_SUPPORTED_SCENE_MODES,
                 "auto,action,portrait,landscape,night,night-portrait,theatre"
                 "candlelight,beach,snow,sunset,steadyphoto,fireworks,sports,party,"
                 "auto_hdr,hdr,asd,backlight,flowers,AR");
 
     /* HFR video recording workaround */
-    const char *recordingHint = params.get(CameraParameters::KEY_RECORDING_HINT);
+    const char *recordingHint = params.get(android::CameraParameters::KEY_RECORDING_HINT);
     if (recordingHint && !strcmp(recordingHint, "true")) {
-        params.set(CameraParameters::KEY_QC_VIDEO_HIGH_FRAME_RATE, videoHfr);
+        params.set(android::CameraParameters::KEY_QC_VIDEO_HIGH_FRAME_RATE, videoHfr);
     }
 
 #if !LOG_NDEBUG
@@ -159,13 +159,13 @@ static char *camera_fixup_setparams(int id, const char *settings)
      * vendor call, unless the Motorola camera app is used. Save the value
      * so that we can later return it.
      */
-    const char *hfr = params.get(CameraParameters::KEY_QC_VIDEO_HIGH_FRAME_RATE);
+    const char *hfr = params.get(android::CameraParameters::KEY_QC_VIDEO_HIGH_FRAME_RATE);
     snprintf(videoHfr, sizeof(videoHfr), "%s", hfr ? hfr : "off");
 
-    const char *sceneMode = params.get(CameraParameters::KEY_SCENE_MODE);
+    const char *sceneMode = params.get(android::CameraParameters::KEY_SCENE_MODE);
         if (sceneMode != NULL) {
-            if (!strcmp(sceneMode, CameraParameters::SCENE_MODE_HDR)) {
-                params.remove(CameraParameters::KEY_QC_ZSL);
+            if (!strcmp(sceneMode, android::CameraParameters::SCENE_MODE_HDR)) {
+                params.remove(android::CameraParameters::KEY_QC_ZSL);
         }
     }
     
@@ -173,11 +173,11 @@ static char *camera_fixup_setparams(int id, const char *settings)
     * In some cases the vendor HAL tries to restore an invalid fps range
     * (10000,15000) causing a crash.
     */
-    const char *fps = params.get(CameraParameters::KEY_PREVIEW_FPS_RANGE);
-    const char *fpsValues = params.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE);
+    const char *fps = params.get(android::CameraParameters::KEY_PREVIEW_FPS_RANGE);
+    const char *fpsValues = params.get(android::CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE);
             if (fps != NULL && fpsValues != NULL) {
                 if (!strstr(fpsValues, fps)) {
-                    params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "15000,30000");
+                    params.set(android::CameraParameters::KEY_PREVIEW_FPS_RANGE, "15000,30000");
                 }
             }
  
