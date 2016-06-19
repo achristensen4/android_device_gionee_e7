@@ -45,6 +45,8 @@ static int camera_device_close(hw_device_t *device);
 static int camera_get_number_of_cameras(void);
 static int camera_get_camera_info(int camera_id, struct camera_info *info);
 
+static char videoHfr[4] = "off";
+
 static struct hw_module_methods_t camera_module_methods = {
     .open = camera_device_open
 };
