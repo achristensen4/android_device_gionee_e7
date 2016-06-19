@@ -107,6 +107,8 @@ static char *camera_fixup_getparams(int id, const char *settings)
     params.dump();
 #endif
 
+    params.remove("gesture");
+    params.remove("food");
     params.set(CameraParameters::KEY_SUPPORTED_FLASH_MODES, "auto,on,off,torch");
 
     params.set(CameraParameters::KEY_QC_SUPPORTED_DENOISE, "denoise-on,denoise-off");
