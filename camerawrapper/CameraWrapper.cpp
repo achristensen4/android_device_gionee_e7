@@ -111,8 +111,8 @@ static char *camera_fixup_getparams(int __attribute__((unused)) id,
     params.dump();
 #endif
 
-    params.remove("gesture");
-    params.remove("food");
+    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
+    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
     params.set(android::CameraParameters::KEY_SUPPORTED_FLASH_MODES, "auto,on,off,torch");
 
     params.set(android::CameraParameters::KEY_QC_SUPPORTED_DENOISE, "denoise-on,denoise-off");
@@ -168,6 +168,9 @@ static char *camera_fixup_setparams(int id, const char *settings)
     params.dump();
 #endif
 
+    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
+    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
+      
     /*
      * The video-hfr parameter gets removed from the parameters list by the
      * vendor call, unless the Motorola camera app is used. Save the value
