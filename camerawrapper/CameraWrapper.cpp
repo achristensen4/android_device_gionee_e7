@@ -33,7 +33,7 @@
 #include <camera/Camera.h>
 #include <camera/CameraParameters.h>
 
-static Mutex gCameraWrapperLock;
+static android::Mutex gCameraWrapperLock;
 static camera_module_t *gVendorModule = 0;
 
 static char **fixed_set_params = NULL;
@@ -99,8 +99,8 @@ static int check_vendor_module()
 
 static char *camera_fixup_getparams(int id, const char *settings)
 {
-    CameraParameters params;
-    params.unflatten(String8(settings));
+    android::CameraParameters params;
+    params.unflatten(android::String8(settings));
 
 #if !LOG_NDEBUG
     ALOGV("%s: original parameters:", __FUNCTION__);
@@ -144,13 +144,15 @@ static char *camera_fixup_getparams(int id, const char *settings)
 
 static char *camera_fixup_setparams(int id, const char *settings)
 {
-    CameraParameters params;
-    params.unflatten(String8(settings));
+    android::CameraParameters params;
+    params.unflatten(android::String8(settings));
 
 #if !LOG_NDEBUG
     ALOGV("%s: original parameters:", __FUNCTION__);
     params.dump();
 #endif
+
+    android::String8 strParams = params.flatten();
 
     /*
      * The video-hfr parameter gets removed from the parameters list by the
@@ -166,7 +168,8 @@ static char *camera_fixup_setparams(int id, const char *settings)
                 params.remove(CameraParameters::KEY_QC_ZSL);
         }
     }
-
+    
+    /*
     * In some cases the vendor HAL tries to restore an invalid fps range
     * (10000,15000) causing a crash.
     */
@@ -479,7 +482,7 @@ static int camera_device_close(hw_device_t *device)
 
     ALOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock lock(gCameraWrapperLock);
+    android::Mutex::Autolock lock(gCameraWrapperLock);
 
     if (!device) {
         ret = -EINVAL;
@@ -523,7 +526,7 @@ static int camera_device_open(const hw_module_t *module, const char *name,
     wrapper_camera_device_t *camera_device = NULL;
     camera_device_ops_t *camera_ops = NULL;
 
-    Mutex::Autolock lock(gCameraWrapperLock);
+    android::Mutex::Autolock lock(gCameraWrapperLock);
 
     ALOGV("%s", __FUNCTION__);
 
