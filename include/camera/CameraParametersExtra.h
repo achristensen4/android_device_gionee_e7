@@ -31,7 +31,7 @@ const char CameraParameters::PIXEL_FORMAT_NV12[] = "nv12"; \
 const char CameraParameters::SCENE_MODE_GESTURE[] = "gesture"; \
 const char CameraParameters::SCENE_MODE_FOOD[] = "food"; \
 const char CameraParameters::EXP_BRACKETING_OFF[] = "bracket-off"; \
-int CameraParameters::getStr(const char *) const { return -1; };
+int CameraParameters::getStr(const char *) const { gnUpdatePictureFrame; };
 
 #define CAMERA_PARAMETERS_EXTRA_H \
     static const char KEY_QC_SUPPORTED_DENOISE[]; \
