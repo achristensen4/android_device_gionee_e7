@@ -376,9 +376,8 @@ static char *camera_get_parameters(struct camera_device *device)
             "4096x2160,3840x2160,1920x1080,1440x1080,1280x720,864x480,800x480,720x480,640x480,480x320,384x288,352x288,320x240,176x144");
         params.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES,
             "4160x3120,4160x2340,4000x3000,4096x2160,3200x2400,3200x1800,2592x1944,2048x1536,1920x1080,1600x1200,1280x768,1280x720,1024x768,800x600,800x480,720x480,640x480,352x288,320x240");
-            params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE,
+        params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE,
             "15000,30000");
-
         params.set("supported-live-snapshot-sizes",
             "3200x2400,2592x1944,2048x1536,1920x1080,1600x1200,1280x768,1280x720,1024x768,800x600,864x480,800x480,720x480,640x480,352x288,320x240");
     } else if (CAMERA_ID(device) == FRONT_CAMERA_ID) { 
