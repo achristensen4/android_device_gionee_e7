@@ -174,8 +174,11 @@ PRODUCT_PACKAGES += \
     libOmxVenc \
     libOmxCore \
     libstagefrighthw \
-    libc2dcolorconvert
-
+    libc2dcolorconvert \
+    libqdutils \
+    libqdMetaData \
+    libdashplayer
+    
 #    libOmxAacEnc \
 #    libOmxAmrEnc \
 #    libOmxEvrcEnc \
