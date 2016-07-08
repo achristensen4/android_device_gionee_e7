@@ -37,12 +37,8 @@ on init
     # Preload the BoringSSL wrapper
     export LD_PRELOAD /system/lib/libboringssl-compat.so
 
-    chmod 0701 /mnt/media_rw
-    mkdir /mnt/media_rw/usbdisk 0700 media_rw media_rw
-
     # Set permissions for persist partition
     mkdir /persist 0771 system system
-    mkdir /firmware 0771 system system
     
     # Support legacy paths
     symlink /sdcard /mnt/sdcard
@@ -53,13 +49,13 @@ on init
 
 on fs
     mount_all ./fstab.qcom
+
     restorecon_recursive /persist
     
 on early-boot
     # set RLIMIT_MEMLOCK to 64MB
     setrlimit 8 67108864 67108864
     # Allow subsystem (modem etc) debugging
-    write /sys/module/subsystem_restart/parameters/enable_debug ${persist.sys.ssr.enable_debug}
     write /sys/kernel/boot_adsp/boot 1
     exec /system/bin/sh /init.qcom.early_boot.sh ${ro.board.platform}
     exec /system/bin/sh /init.qcom.syspart_fixup.sh ${ro.board.platform} ${ro.serialno}
@@ -108,7 +104,6 @@ on boot
 
     #Remove SUID bit for iproute2 ip tool
     chmod 0755 /system/bin/ip
-
 
     chmod 0444 /sys/devices/platform/msm_hsusb/gadget/usb_state
 
@@ -163,7 +158,8 @@ on boot
     write /sys/bus/msm_subsys/devices/subsys2/restart_level related
     write /sys/bus/msm_subsys/devices/subsys3/restart_level related
 
-    #gionee add for dump switch 
+    #gionee add for dump switch
+    chown system camera /sys/class/leds/led:flash_torch/brightness
     chmod 0666 /sys/module/restart/parameters/download_mode
     
     # Gionee wanglei, 2013-10-21, add for torch led
@@ -215,8 +211,6 @@ on boot
     # cpuquiet
     chown system system /sys/devices/system/cpu/cpuquiet/cpuquiet_driver/max_cpus
     
-    start qcamerasvr
-    
 # msm specific files that need to be created on /data
 on post-fs-data
     # Create the directories used by the Wireless subsystem
@@ -243,7 +237,6 @@ on post-fs-data
     # Mounting of persist is moved to 'on emmc-fs' and 'on fs' sections
     # We chown/chmod /persist again so because mount is run as root + defaults
     chown system system /persist
-    chmod 0771 /persist
     
     chmod 0664 /sys/devices/platform/msm_sdcc.1/polling
     chmod 0664 /sys/devices/platform/msm_sdcc.2/polling
@@ -302,14 +295,6 @@ on post-fs-data
     setprop vold.post_fs_data_done 1
 
 on charger
-    # Booting modem
-    wait /dev/block/platform/msm_sdcc.1/by-name/modem
-    mount vfat /dev/block/platform/msm_sdcc.1/by-name/modem /firmware ro shortname=lower,uid=1000,gid=1000,dmask=227,fmask=337,context=u:object_r:firmware_file:s0
-    wait /dev/block/platform/msm_sdcc.1/by-name/system
-    mount ext4 /dev/block/platform/msm_sdcc.1/by-name/system /system ro barrier=1
-    start rmt_storage
-    start irsc_util
-    
     # Enable Power modes and set the CPU Freq Sampling rates
     write /sys/module/lpm_levels/enable_low_power/l2 4
     write /sys/module/msm_pm/modes/cpu0/power_collapse/suspend_enabled 1
@@ -361,7 +346,6 @@ service irsc_util /system/bin/logwrapper /system/bin/irsc_util "/etc/sec_config"
 service rmt_storage /system/bin/rmt_storage
     class core
     user root
-    group system
     
 service config_bluetooth /system/bin/sh /system/etc/init.qcom.bt.sh "onboot"
     class core
@@ -459,7 +443,6 @@ service sensors /system/bin/sensors.qcom
     class late_start
     user root
     group root
-    disabled
 
 on property:ro.data.large_tcp_window_size=true
     # Adjust socket buffer to enlarge TCP receive window for high bandwidth (e.g. DO-RevB)
@@ -565,15 +548,10 @@ service dhcpcd_bnep0 /system/bin/dhcpcd -BKLG
     disabled
     oneshot
 
-#start camera server as daemon
 service qcamerasvr /system/bin/mm-qcamera-daemon
     class late_start
     user camera
     group camera system inet input graphics
-
-service fuse_usbdisk /system/bin/sdcard -u 1023 -g 1023 /mnt/media_rw/usbdisk /storage/usbdisk
-    class late_start
-    disabled
 
 service gpsone_daemon /system/bin/gpsone_daemon
     class late_start
@@ -736,8 +714,10 @@ service hcidump /system/bin/sh /system/etc/hcidump.sh
     disabled
     oneshot
 
-service charger /charger
+service charger /sbin/healthd -c
     class charger
+    critical
+    seclabel u:r:healthd:s0
 
 service ssr_diag /system/bin/ssr_diag
     class late_start
