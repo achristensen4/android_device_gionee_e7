@@ -26,11 +26,10 @@
 #
 
 import init.qcom.usb.rc
-import init.target.rc
 
 on early-init
     mkdir /firmware 0771 system system
-    chmod 0755 /sys/kernel/debug
+    symlink /data/tombstones /tombstones
     mount debugfs debugfs /sys/kernel/debug
 
 on init
@@ -57,8 +56,6 @@ on early-boot
     setrlimit 8 67108864 67108864
     # Allow subsystem (modem etc) debugging
     write /sys/kernel/boot_adsp/boot 1
-    exec /system/bin/sh /init.qcom.early_boot.sh ${ro.board.platform}
-    exec /system/bin/sh /init.qcom.syspart_fixup.sh ${ro.board.platform} ${ro.serialno}
     
 on boot    
     chown bluetooth bluetooth /sys/module/bluetooth_power/parameters/power
@@ -211,6 +208,8 @@ on boot
     # cpuquiet
     chown system system /sys/devices/system/cpu/cpuquiet/cpuquiet_driver/max_cpus
     
+    start config_bluetooth
+
 # msm specific files that need to be created on /data
 on post-fs-data
     # Create the directories used by the Wireless subsystem
@@ -233,6 +232,14 @@ on post-fs-data
 
     # Create directory used by audio subsystem
     mkdir /data/misc/audio 0770 audio audio
+
+    # Create directory used by sensor subsystem
+    mkdir /persist/sensors 0775 system root
+    write /persist/sensors/sensors_settings 1
+    chmod 0644 /persist/sensors/sensors_settings
+    chown system root /persist/sensors/sensors_settings
+    mkdir /data/misc/sensors 0775 system system
+    restorecon_recursive /data/misc/sensors
 
     # Mounting of persist is moved to 'on emmc-fs' and 'on fs' sections
     # We chown/chmod /persist again so because mount is run as root + defaults
@@ -318,25 +325,6 @@ on property:bluetooth.isEnabled=true
 
 on property:ro.bluetooth.ftm_enabled=true
     start ftmd
-
-service qcom-c_core-sh /system/bin/sh /init.qcom.class_core.sh
-    class core
-    user root
-    oneshot
-
-service qcom-c_main-sh /system/bin/sh /init.qcom.class_main.sh
-    class main
-    user root
-    oneshot
-
-#service ril-qmi /system/bin/sh /init.qcom.ril.sh
-#    class main
-#    user root
-#    oneshot
-
-service cnd /system/bin/cnd
-    class late_start
-    socket cnd stream 660 root inet
 
 service irsc_util /system/bin/logwrapper /system/bin/irsc_util "/etc/sec_config"
     class main
@@ -479,15 +467,9 @@ service qseecomd /system/bin/qseecomd
     group root
 
 service audiod /system/bin/audiod
-   class late_start
-   user system
-   group system
-
-service usf-post-boot /system/bin/sh /system/etc/usf_post_boot.sh
-    class late_start
-    user root
-    disabled
-    oneshot
+    class main
+    user system
+    group audio
 
 service wcnss-service /system/bin/wcnss_service
     class main
@@ -595,13 +577,6 @@ service lowi-server /system/bin/lowi-server
     group gps net_admin wifi inet
     disabled
 
-#service fm_dl /system/bin/sh /system/etc/init.qcom.fm.sh
-#    class late_start
-#    user root
-#    group system fm_radio
-#    disabled
-#    oneshot
-
 service drmdiag /system/bin/drmdiagapp
     class late_start
      user root
@@ -614,55 +589,14 @@ on property:drmdiag.load=1
 on property:drmdiag.load=0
     stop drmdiag
 
-service qcom-sh /system/bin/sh /init.qcom.sh
-    class late_start
-    user root
-    oneshot
-
-#service qcom-post-boot /system/bin/sh /system/etc/init.qcom.post_boot.sh
-#    class late_start
-#    user root
-#    disabled
-#    oneshot
-
-#service wifi-sdio-on /system/bin/sh /system/etc/init.qcom.sdio.sh
-#    class late_start
-#    group wifi inet
-#    disabled
-#    oneshot
-
-#service wifi-crda /system/bin/sh /system/etc/init.crda.sh
-#   class late_start
-#   user root
-#   disabled
-#   oneshot
-
-
 on property:sys.boot_completed=1
     write /dev/kmsg "Boot completed"
-
-service atfwd /system/bin/ATFWD-daemon
-    class late_start
-    user system
-    group system radio
-
-#service hdmid /system/bin/hdmid
-#    class late_start
-#    socket hdmid stream 0660 root system graphics
-#    disabled
 
 service ppd /system/bin/mm-pp-daemon
     class late_start
     user system
     socket pps stream 0660 system system graphics
     group system graphics
-
-#service hostapd /system/bin/hostapd -dddd /data/hostapd/hostapd.conf
-#    class late_start
-#    user root
-#    group root
-#    oneshot
-#    disabled
 
 service ds_fmc_appd /system/bin/ds_fmc_appd -p "rmnet0" -D
     class late_start
@@ -685,22 +619,6 @@ service battery_monitor /system/bin/battery_monitor
     user system
     group system
     disabled
-
-service ril-daemon1 /system/bin/rild -c 1
-    class main
-    socket rild1 stream 660 root radio
-    socket rild-debug1 stream 660 radio system
-    user root
-    disabled
-    group radio cache inet misc audio sdcard_r sdcard_rw qcom_oncrpc diag qcom_diag log
-
-service ril-daemon2 /system/bin/rild -c 2
-    class main
-    socket rild2 stream 660 root radio
-    socket rild-debug2 stream 660 radio system
-    user root
-    disabled
-    group radio cache inet misc audio sdcard_r sdcard_rw diag qcom_diag log
 
 service profiler_daemon /system/bin/profiler_daemon
     class late_start
