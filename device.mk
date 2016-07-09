@@ -24,24 +24,13 @@ $(call inherit-product, frameworks/native-caf/build/phone-xxhdpi-2048-hwui-memor
 # E7 Init files
 PRODUCT_COPY_FILES += \
     device/gionee/e7/rootdir/init.qcom.rc:root/init.qcom.rc \
-    device/gionee/e7/rootdir/init.qcom.class_core.sh:root/init.qcom.class_core.sh \
-    device/gionee/e7/rootdir/init.qcom.class_main.sh:root/init.qcom.class_main.sh \
-    device/gionee/e7/rootdir/init.qcom.early_boot.sh:root/init.qcom.early_boot.sh \
-    device/gionee/e7/rootdir/init.qcom.factory.sh:root/init.qcom.factory.sh \
-    device/gionee/e7/rootdir/init.qcom.sh:root/init.qcom.sh \
-    device/gionee/e7/rootdir/init.qcom.ssr.sh:root/init.qcom.ssr.sh \
-    device/gionee/e7/rootdir/init.qcom.syspart_fixup.sh:root/init.qcom.syspart_fixup.sh \
     device/gionee/e7/rootdir/init.qcom.usb.rc:root/init.qcom.usb.rc \
-    device/gionee/e7/rootdir/init.target.rc:root/init.target.rc \
     device/gionee/e7/rootdir/fstab.qcom:root/fstab.qcom \
     device/gionee/e7/rootdir/ueventd.qcom.rc:root/ueventd.qcom.rc
 
 # system/etc files
 PRODUCT_COPY_FILES += \
-    device/gionee/e7/rootdir/etc/hsic.control.bt.sh:system/etc/hsic.control.bt.sh \
-    device/gionee/e7/rootdir/etc/init.qcom.bt.sh:system/etc/init.qcom.bt.sh \
-    device/gionee/e7/rootdir/etc/usf_post_boot.sh:system/etc/usf_post_boot.sh \
-    device/gionee/e7/rootdir/etc/init.qcom.modem_links.sh:system/etc/init.qcom.modem_links.sh
+    device/gionee/e7/rootdir/etc/init.qcom.bt.sh:system/etc/init.qcom.bt.sh
 
 PRODUCT_COPY_FILES += \
     frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:system/etc/media_codecs_google_audio.xml \
