@@ -250,9 +250,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     media.aac_51_output_enabled=true
 
-PRODUCT_PROPERTY_OVERRIDES += \
-    debug.egl.recordable.rgba8888=1
-
 # qcom
 PRODUCT_PROPERTY_OVERRIDES += \
     camera2.portability.force_api=1
