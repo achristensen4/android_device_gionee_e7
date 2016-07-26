@@ -29,7 +29,7 @@ BOARD_KERNEL_CMDLINE := console=ttyHSL0,115200,n8 androidboot.selinux=disabled a
 BOARD_KERNEL_BASE := 0x00000000
 BOARD_KERNEL_PAGESIZE := 2048
 BOARD_CUSTOM_BOOTIMG_MK := device/gionee/e7/mkbootimg.mk
-KERNEL_TOOLCHAIN := "$(ANDROID_BUILD_TOP)/prebuilts/gcc/$(strip $(HOST_OS))-x86/arm/arm-eabi-4.9/bin/"
+KERNEL_TOOLCHAIN := "$(ANDROID_BUILD_TOP)/prebuilts/gcc/$(strip $(HOST_OS))-x86/arm/arm-eabi-4.8/bin/"
 
 # global
 TARGET_SPECIFIC_HEADER_PATH := device/gionee/e7/include
