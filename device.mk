@@ -241,8 +241,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.telephony.default_network=9
 
 PRODUCT_PROPERTY_OVERRIDES += \
-    drm.service.enabled=true \
-    ro.debuggable=1
+    drm.service.enabled=true
 
 PRODUCT_PROPERTY_OVERRIDES += \
     wifi.interface=wlan0
