@@ -66,7 +66,6 @@ AUDIO_FEATURE_ENABLED_COMPRESS_CAPTURE := true
 AUDIO_FEATURE_ENABLED_INCALL_MUSIC := true
 
 # Camera
-COMMON_GLOBAL_CFLAGS += -DNEEDS_VECTORIMPL_SYMBOLS
 USE_DEVICE_SPECIFIC_CAMERA := true
 
 TARGET_RIL_VARIANT := caf
@@ -137,10 +136,10 @@ TARGET_PROVIDES_POWERHAL := true
 TARGET_KEYMASTER_WAIT_FOR_QSEE := true
 
 # selinux
-#include device/qcom/sepolicy/sepolicy.mk
+include device/qcom/sepolicy/sepolicy.mk
 
 #BOARD_SEPOLICY_DIRS += \
-#    device/gionee/e7/sepolicy
+    device/gionee/e7/sepolicy
     
 #TWRP
 TW_THEME := portrait_hdpi
