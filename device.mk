@@ -26,11 +26,13 @@ PRODUCT_COPY_FILES += \
     device/gionee/e7/rootdir/init.qcom.rc:root/init.qcom.rc \
     device/gionee/e7/rootdir/init.qcom.usb.rc:root/init.qcom.usb.rc \
     device/gionee/e7/rootdir/fstab.qcom:root/fstab.qcom \
+    device/gionee/e7/rootdir/init.qcom.syspart_fixup.sh:root/init.qcom.syspart_fixup.sh \
     device/gionee/e7/rootdir/ueventd.qcom.rc:root/ueventd.qcom.rc
 
 # system/etc files
 PRODUCT_COPY_FILES += \
-    device/gionee/e7/rootdir/etc/init.qcom.bt.sh:system/etc/init.qcom.bt.sh
+    device/gionee/e7/rootdir/etc/init.qcom.bt.sh:system/etc/init.qcom.bt.sh \
+    device/gionee/e7/rootdir/etc/init.qcom.modem_links.sh:system/etc/init.qcom.modem_links.sh
 
 PRODUCT_COPY_FILES += \
     frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:system/etc/media_codecs_google_audio.xml \
