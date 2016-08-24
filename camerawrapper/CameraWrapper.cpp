@@ -138,6 +138,12 @@ static char *camera_fixup_getparams(int id, const char *settings)
     params.remove("hfr-size-values");
     params.remove("video-hfr-values");
 
+    params.dump();
+ #endif
+ 
+    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
+    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
+
     if (!videoMode) {
         /* Back camera */
         if (id == 0) {
@@ -208,7 +214,11 @@ static char *camera_fixup_setparams(int id, const char *settings)
         // preview size same as video-size
         params.set("preview-size", video_size);
     }
-    params.set("oppo-app", "1");
+        params.dump();
+ #endif
+ 
+    params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
+    params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
 
 #ifdef LOG_PARAMETERS
     ALOGI("%s: fixed parameters:", __FUNCTION__);
