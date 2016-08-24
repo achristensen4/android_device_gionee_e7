@@ -137,9 +137,6 @@ static char *camera_fixup_getparams(int id, const char *settings)
     params.remove("still-more-values");
     params.remove("hfr-size-values");
     params.remove("video-hfr-values");
-
-    params.dump();
- #endif
  
     params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
     params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
@@ -214,8 +211,6 @@ static char *camera_fixup_setparams(int id, const char *settings)
         // preview size same as video-size
         params.set("preview-size", video_size);
     }
-        params.dump();
- #endif
  
     params.set(android::CameraParameters::SCENE_MODE_GESTURE, "gesture");
     params.set(android::CameraParameters::SCENE_MODE_FOOD, "food");
