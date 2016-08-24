@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2014, The CyanogenMod Project
+ * Copyright (C) 2014, The CyanogenMod Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 */
 
 //#define LOG_NDEBUG 0
+//#define LOG_PARAMETERS 1
 
 #define LOG_TAG "CameraWrapper"
 #include <cutils/log.h>
@@ -31,17 +32,12 @@
 #include <hardware/hardware.h>
 #include <hardware/camera.h>
 #include <camera/Camera.h>
-#include <camera/CameraParameters2.h>
-#include <dlfcn.h>
-#include <math.h>
+#include <camera/CameraParameters.h>
 
-#define BACK_CAMERA_ID 0
-#define FRONT_CAMERA_ID 1
-
-using namespace android;
-
-static Mutex gCameraWrapperLock;
+static android::Mutex gCameraWrapperLock;
 static camera_module_t *gVendorModule = 0;
+
+static char **fixed_set_params = NULL;
 
 static int camera_device_open(const hw_module_t *module, const char *name,
         hw_device_t **device);
@@ -58,7 +54,7 @@ camera_module_t HAL_MODULE_INFO_SYM = {
          .module_api_version = CAMERA_MODULE_API_VERSION_1_0,
          .hal_api_version = HARDWARE_HAL_API_VERSION,
          .id = CAMERA_HARDWARE_MODULE_ID,
-         .name = "MSM8974 Camera",
+         .name = "E7 Camera Wrapper",
          .author = "The CyanogenMod Project",
          .methods = &camera_module_methods,
          .dso = NULL, /* remove compilation warnings */
@@ -69,7 +65,7 @@ camera_module_t HAL_MODULE_INFO_SYM = {
     .set_callbacks = NULL, /* remove compilation warnings */
     .get_vendor_tag_ops = NULL, /* remove compilation warnings */
     .open_legacy = NULL, /* remove compilation warnings */
-    .set_torch_mode = NULL,
+    .set_torch_mode = NULL, /* remove compilation warnings */
     .init = NULL,
     .reserved = {0}, /* remove compilation warnings */
 };
@@ -78,7 +74,6 @@ typedef struct wrapper_camera_device {
     camera_device_t base;
     int id;
     camera_device_t *vendor;
-    bool initial_get;
 } wrapper_camera_device_t;
 
 #define VENDOR_CALL(device, func, ...) ({ \
@@ -87,10 +82,6 @@ typedef struct wrapper_camera_device {
 })
 
 #define CAMERA_ID(device) (((wrapper_camera_device_t *)(device))->id)
-
-static char *camera_get_parameters(struct camera_device *device);
-static int camera_set_parameters(struct camera_device *device,
-        const char *params);
 
 static int check_vendor_module()
 {
@@ -102,10 +93,135 @@ static int check_vendor_module()
 
     rv = hw_get_module_by_class("camera", "vendor",
             (const hw_module_t**)&gVendorModule);
-    if (rv) {
-        ALOGE("failed to open vendor camera module %d", rv);
-    }
+    if (rv)
+        ALOGE("failed to open vendor camera module");
     return rv;
+}
+
+static const char *KEY_EXPOSURE_TIME = "exposure-time";
+static const char *KEY_EXPOSURE_TIME_VALUES = "exposure-time-values";
+static const char *KEY_SHUTTER_SPEED_VALUES = "shutter-speed-values";
+static const char *KEY_SHUTTER_SPEED = "shutter-speed";
+
+static char *camera_fixup_getparams(int id, const char *settings)
+{
+    bool videoMode = false;
+    const char *exposureTimeValues = "0,200,400,667,1000,2000,4000,8000,15625,31250,62500,125000,250000,500000,1000000,2000000,4000000,8000000,16000000,32000000,64000000";
+    const char *supportedSceneModes = "auto,asd,landscape,snow,beach,sunset,night,portrait,backlight,sports,steadyphoto,flowers,candlelight,fireworks,party,night-portrait,theatre,action,AR";
+
+    android::CameraParameters params;
+    params.unflatten(android::String8(settings));
+
+#ifdef LOG_PARAMETERS
+    ALOGV("%s: original parameters:", __FUNCTION__);
+    params.dump();
+#endif
+
+    if (params.get(android::CameraParameters::KEY_RECORDING_HINT)) {
+        videoMode = (!strcmp(params.get(
+                android::CameraParameters::KEY_RECORDING_HINT), "true"));
+    }
+
+    /* Remove unsupported features */
+    params.remove("af-bracket");
+    params.remove("af-bracket-values");
+    params.remove("chroma-flash");
+    params.remove("chroma-flash-values");
+    params.remove("dis");
+    params.remove("dis-values");
+    params.remove("opti-zoom");
+    params.remove("opti-zoom-values");
+    params.remove("see-more");
+    params.remove("see-more-values");
+    params.remove("still-more");
+    params.remove("still-more-values");
+    params.remove("hfr-size-values");
+    params.remove("video-hfr-values");
+
+    if (!videoMode) {
+        /* Back camera */
+        if (id == 0) {
+            /* Set supported exposure time values */
+            params.set(KEY_EXPOSURE_TIME_VALUES, exposureTimeValues);
+            params.set(KEY_SHUTTER_SPEED_VALUES, exposureTimeValues);
+        }
+
+        /* Front camera */
+        if (id == 1) {
+            /* Remove HDR scene mode */
+            params.set(android::CameraParameters::KEY_SUPPORTED_SCENE_MODES,
+                    supportedSceneModes);
+        }
+    }
+
+#ifdef LOG_PARAMETERS
+    ALOGI("%s: fixed parameters:", __FUNCTION__);
+    params.dump();
+#endif
+
+    android::String8 strParams = params.flatten();
+    char *ret = strdup(strParams.string());
+
+    return ret;
+}
+
+static char *camera_fixup_setparams(int id, const char *settings)
+{
+    bool videoMode = false;
+    bool slowShutterMode = false;
+
+    android::CameraParameters params;
+    params.unflatten(android::String8(settings));
+
+#ifdef LOG_PARAMETERS
+    ALOGV("%s: original parameters:", __FUNCTION__);
+    params.dump();
+#endif
+
+    if (params.get(android::CameraParameters::KEY_RECORDING_HINT)) {
+        videoMode = (!strcmp(params.get(
+                android::CameraParameters::KEY_RECORDING_HINT), "true"));
+    }
+
+    if (params.get(KEY_SHUTTER_SPEED)) {
+    	params.set(KEY_EXPOSURE_TIME, params.get(KEY_SHUTTER_SPEED));
+    }
+    if (params.get(KEY_EXPOSURE_TIME)) {
+        slowShutterMode = (strcmp(params.get(KEY_EXPOSURE_TIME), "0"));
+    }
+    /* Disable flash if slow shutter is enabled */
+    if (!videoMode) {
+        if (id == 0) {
+            if (slowShutterMode) {
+                params.set(android::CameraParameters::KEY_FLASH_MODE,
+                        android::CameraParameters::FLASH_MODE_OFF);
+            }
+        }
+    } else {
+        const char *video_size = params.get(android::CameraParameters::KEY_VIDEO_SIZE);
+        // force nv12-venus for 4k resolutios
+        // preview-format: nv12-venus for 4096x2160,3840x2160
+        if (!strcmp(video_size, "4096x2160") ||
+                !strcmp(video_size, "3840x2160")) {
+            params.set("preview-format", "nv12-venus");
+        }
+        // preview size same as video-size
+        params.set("preview-size", video_size);
+    }
+    params.set("oppo-app", "1");
+
+#ifdef LOG_PARAMETERS
+    ALOGI("%s: fixed parameters:", __FUNCTION__);
+    params.dump();
+#endif
+
+    android::String8 strParams = params.flatten();
+    if (fixed_set_params[id])
+        free(fixed_set_params[id]);
+    fixed_set_params[id] = strdup(strParams.string());
+    char *ret = fixed_set_params[id];
+
+    return ret;
 }
 
 /*******************************************************************
@@ -222,13 +338,6 @@ static int camera_store_meta_data_in_buffers(struct camera_device *device,
     return VENDOR_CALL(device, store_meta_data_in_buffers, enable);
 }
 
-static bool is4k(CameraParameters2 &params) {
-    int video_width, video_height;
-    params.getVideoSize(&video_width, &video_height);
-
-    return video_width*video_height > 1920*1080;
-}
-
 static int camera_start_recording(struct camera_device *device)
 {
     ALOGV("%s->%08X->%08X", __FUNCTION__, (uintptr_t)device,
@@ -236,23 +345,6 @@ static int camera_start_recording(struct camera_device *device)
 
     if (!device)
         return EINVAL;
-
-
-    CameraParameters2 parameters;
-    parameters.unflatten(String8(camera_get_parameters(device)));
-    if (CAMERA_ID(device) == BACK_CAMERA_ID) {
-        if (is4k(parameters)) {
-            parameters.set("preview-format", "nv12-venus");
-        }
-        parameters.set("picture-size", "4160x3120");
-    }
-    camera_set_parameters(device,  strdup(parameters.flatten().string()));
-
-    CameraParameters2 parameters2;
-    parameters2.unflatten(String8(VENDOR_CALL(device, get_parameters)));
-    parameters2.dump();
-
-
 
     return VENDOR_CALL(device, start_recording);
 }
@@ -345,7 +437,11 @@ static int camera_set_parameters(struct camera_device *device,
     if (!device)
         return -EINVAL;
 
-    return VENDOR_CALL(device, set_parameters, params);
+    char *tmp = NULL;
+    tmp = camera_fixup_setparams(CAMERA_ID(device), params);
+
+    int ret = VENDOR_CALL(device, set_parameters, tmp);
+    return ret;
 }
 
 static char *camera_get_parameters(struct camera_device *device)
@@ -356,45 +452,13 @@ static char *camera_get_parameters(struct camera_device *device)
     if (!device)
         return NULL;
 
-    char *parameters = VENDOR_CALL(device, get_parameters); 
-    wrapper_camera_device_t *wrapper = (wrapper_camera_device_t *)device;
+    char *params = VENDOR_CALL(device, get_parameters);
 
-    if (wrapper->initial_get) {
-        wrapper->initial_get = false;
-        CameraParameters2 params;
-        params.unflatten(String8(parameters));
-        VENDOR_CALL(device, set_parameters, strdup(params.flatten().string())); 
-        parameters = VENDOR_CALL(device, get_parameters);
-    }
+    char *tmp = camera_fixup_getparams(CAMERA_ID(device), params);
+    VENDOR_CALL(device, put_parameters, params);
+    params = tmp;
 
-    CameraParameters2 params;
-    params.unflatten(String8(parameters));
-    if (CAMERA_ID(device) == BACK_CAMERA_ID) {
-        /* Disable 352x288 preview sizes, the combination of this preview size and larger resolutions stalls the HAL */
-        params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES,
-            "1920x1080,1440x1080,1280x720,720x480,640x480,320x240");
-        params.set(CameraParameters::KEY_SUPPORTED_VIDEO_SIZES,
-            "4096x2160,3840x2160,1920x1080,1280x720,864x480,800x480,720x480,640x480,320x240,176x144");
-        params.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES,
-            "4160x3120,4160x2340,4000x3000,4096x2160,3200x2400,3200x1800,2592x1944,2048x1536,1920x1080,1600x1200,1280x768,1280x720,1024x768,800x600,800x480,720x480,640x480,320x240");
-        params.set("preview-fps-range-values", "(7500,30000),(8000,30000),(30000,30000)");
-        params.set("supported-live-snapshot-sizes",
-            "3200x2400,2592x1944,2048x1536,1920x1080,1600x1200,1280x768,1280x720,1024x768,800x600,864x480,800x480,720x480,640x480,320x240");
-    } else if (CAMERA_ID(device) == FRONT_CAMERA_ID) { 
-        /* Inject all supported resolutions */
-        params.set(CameraParameters::KEY_SUPPORTED_VIDEO_SIZES,
-            "1280x720,864x480,800x480,720x480,640x480,320x240,176x144");
-        params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES,
-            "1280x960,1280x720,720x480,640x480,576x432,320x240");
-        params.set("preview-fps-range-values", "(7500,30000),(8000,30000),(30000,30000)");
-    }
-
-    const char *pf = params.get(android::CameraParameters::KEY_PREVIEW_FORMAT);
-    if (pf && strcmp(pf, "nv12-venus") == 0) {
-        params.set(android::CameraParameters::KEY_PREVIEW_FORMAT, "yuv420sp");
-    }
-
-    return strdup(params.flatten().string());
+    return params;
 }
 
 static void camera_put_parameters(struct camera_device *device, char *params)
@@ -402,9 +466,8 @@ static void camera_put_parameters(struct camera_device *device, char *params)
     ALOGV("%s->%08X->%08X", __FUNCTION__, (uintptr_t)device,
             (uintptr_t)(((wrapper_camera_device_t*)device)->vendor));
 
-    if (device) {
-        VENDOR_CALL(device, put_parameters, params);
-    }
+    if (params)
+        free(params);
 }
 
 static int camera_send_command(struct camera_device *device,
@@ -450,11 +513,16 @@ static int camera_device_close(hw_device_t *device)
 
     ALOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock lock(gCameraWrapperLock);
+    android::Mutex::Autolock lock(gCameraWrapperLock);
 
     if (!device) {
         ret = -EINVAL;
         goto done;
+    }
+
+    for (int i = 0; i < camera_get_number_of_cameras(); i++) {
+        if (fixed_set_params[i])
+            free(fixed_set_params[i]);
     }
 
     wrapper_dev = (wrapper_camera_device_t*) device;
@@ -489,7 +557,7 @@ static int camera_device_open(const hw_module_t *module, const char *name,
     wrapper_camera_device_t *camera_device = NULL;
     camera_device_ops_t *camera_ops = NULL;
 
-    Mutex::Autolock lock(gCameraWrapperLock);
+    android::Mutex::Autolock lock(gCameraWrapperLock);
 
     ALOGV("%s", __FUNCTION__);
 
@@ -499,6 +567,14 @@ static int camera_device_open(const hw_module_t *module, const char *name,
 
         cameraid = atoi(name);
         num_cameras = gVendorModule->get_number_of_cameras();
+
+        fixed_set_params = (char **) malloc(sizeof(char *) * num_cameras);
+        if (!fixed_set_params) {
+            ALOGE("parameter memory allocation fail");
+            rv = -ENOMEM;
+            goto fail;
+        }
+        memset(fixed_set_params, 0, sizeof(char *) * num_cameras);
 
         if (cameraid > num_cameras) {
             ALOGE("camera service provided cameraid out of bounds, "
@@ -516,8 +592,6 @@ static int camera_device_open(const hw_module_t *module, const char *name,
         }
         memset(camera_device, 0, sizeof(*camera_device));
         camera_device->id = cameraid;
-
-        camera_device->initial_get = true;
 
         rv = gVendorModule->common.methods->open(
                 (const hw_module_t*)gVendorModule, name,
@@ -549,28 +623,22 @@ static int camera_device_open(const hw_module_t *module, const char *name,
         camera_ops->enable_msg_type = camera_enable_msg_type;
         camera_ops->disable_msg_type = camera_disable_msg_type;
         camera_ops->msg_type_enabled = camera_msg_type_enabled;
-
         camera_ops->start_preview = camera_start_preview;
         camera_ops->stop_preview = camera_stop_preview;
         camera_ops->preview_enabled = camera_preview_enabled;
         camera_ops->store_meta_data_in_buffers = camera_store_meta_data_in_buffers;
-
         camera_ops->start_recording = camera_start_recording;
         camera_ops->stop_recording = camera_stop_recording;
         camera_ops->recording_enabled = camera_recording_enabled;
         camera_ops->release_recording_frame = camera_release_recording_frame;
-
         camera_ops->auto_focus = camera_auto_focus;
         camera_ops->cancel_auto_focus = camera_cancel_auto_focus;
-
         camera_ops->take_picture = camera_take_picture;
         camera_ops->cancel_picture = camera_cancel_picture;
-
         camera_ops->set_parameters = camera_set_parameters;
         camera_ops->get_parameters = camera_get_parameters;
         camera_ops->put_parameters = camera_put_parameters;
         camera_ops->send_command = camera_send_command;
-
         camera_ops->release = camera_release;
         camera_ops->dump = camera_dump;
 
