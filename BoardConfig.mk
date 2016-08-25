@@ -121,9 +121,6 @@ TARGET_RELEASETOOLS_EXTENSIONS := device/gionee/e7
 # inherit from the proprietary version
 -include vendor/gm/e7/BoardConfigVendor.mk
 
-# Include an expanded selection of fonts
-EXTENDED_FONT_FOOTPRINT := true
-
 # charger
 BOARD_CHARGER_DISABLE_INIT_BLANK := true
 HEALTHD_FORCE_BACKLIGHT_CONTROL := true
