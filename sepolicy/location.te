@@ -1,5 +1,5 @@
 ###########################
-# OmniROM oppo common sepolicy
+# OmniROM e7 sepolicy
 #
 
 allow location location_data_file:sock_file unlink;
