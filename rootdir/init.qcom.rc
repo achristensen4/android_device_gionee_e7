@@ -346,7 +346,7 @@ on property:bluetooth.isEnabled=true
 on property:ro.bluetooth.ftm_enabled=true
     start ftmd
 
-service irsc_util /system/bin/logwrapper /system/bin/irsc_util "/etc/sec_config"
+service irsc_util /system/bin/irsc_util "/etc/sec_config"
     class main
     user root
     oneshot
@@ -358,6 +358,7 @@ service rmt_storage /system/bin/rmt_storage
 service config_bluetooth /system/bin/sh /system/etc/init.qcom.bt.sh "onboot"
     class core
     user root
+    seclabel u:r:bluetooth_loader:s0
     oneshot
 
 service dbus /system/bin/dbus-daemon --system --nofork
@@ -382,8 +383,9 @@ service bluetoothd /system/bin/logwrapper /system/bin/bluetoothd -n
 service hciattach /system/bin/sh /system/etc/init.qcom.bt.sh
     class late_start
     user bluetooth
-    group bluetooth net_bt_admin
+    group qcom_oncrpc bluetooth net_bt_admin system
     disabled
+    seclabel u:r:bluetooth_loader:s0
     oneshot
 
 on property:bluetooth.hciattach=true
