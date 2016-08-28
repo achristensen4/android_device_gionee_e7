@@ -1,5 +1,5 @@
 ###########################
-# OmniROM oppo common sepolicy
+# OmniROM e7 sepolicy
 #
 
 #allow mediaserver audiod:binder call;
